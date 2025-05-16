@@ -19,10 +19,8 @@ const pool = new Pool({
     ssl: connectionString.includes('localhost') ? false : { rejectUnauthorized: false }
 });
 
-// Variável para armazenar a URL da playlist carregada do banco
-let currentPlaylistUrl = "https://www.youtube.com/embed/videoseries?list=PLx0sYbCqOb8TBPRdmBHs5Iftvv9TPboYG"; // Valor padrão inicial
+let currentPlaylistUrl = "https://www.youtube.com/embed/videoseries?list=PLx0sYbCqOb8TBPRdmBHs5Iftvv9TPboYG"; 
 
-// Função para carregar configurações do banco
 async function loadAppConfig() {
     try {
         const result = await pool.query("SELECT config_value FROM app_config WHERE config_key = 'currentPlaylistUrl'");
@@ -30,7 +28,6 @@ async function loadAppConfig() {
             currentPlaylistUrl = result.rows[0].config_value;
             console.log('SERVER: currentPlaylistUrl carregada do banco:', currentPlaylistUrl);
         } else {
-            // Se não existir no banco, insere o valor padrão
             await pool.query(
                 "INSERT INTO app_config (config_key, config_value) VALUES ($1, $2) ON CONFLICT (config_key) DO NOTHING",
                 ['currentPlaylistUrl', currentPlaylistUrl]
@@ -39,11 +36,9 @@ async function loadAppConfig() {
         }
     } catch (err) {
         console.error('SERVER: Erro ao carregar currentPlaylistUrl do banco:', err);
-        // Mantém o valor padrão se houver erro
     }
 }
 
-// Função para salvar configurações no banco
 async function saveAppConfig(key, value) {
     try {
         await pool.query(
@@ -58,13 +53,12 @@ async function saveAppConfig(key, value) {
     }
 }
 
-
-pool.connect(async (err) => { // Adicionado async aqui
+pool.connect(async (err) => {
     if (err) {
         console.error('Erro ao conectar ao PostgreSQL', err.stack);
     } else {
         console.log('Conectado ao PostgreSQL com sucesso!');
-        await loadAppConfig(); // Carrega a config da playlist após conectar ao banco
+        await loadAppConfig(); 
     }
 });
 
@@ -72,7 +66,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
 app.post('/login', async (req, res) => {
-    // ... (código do login como antes)
     console.log("LOG SERVER: Rota /login acessada!");
     const { username, password } = req.body;
     console.log("LOG SERVER: Credenciais recebidas para login:", { username });
@@ -82,27 +75,22 @@ app.post('/login', async (req, res) => {
             const userFromDb = result.rows[0];
             const match = await bcrypt.compare(password, userFromDb.password_hash);
             if (match) {
-                console.log("LOG SERVER: Login BEM SUCEDIDO para:", username);
                 res.json({ success: true, username: userFromDb.username });
             } else {
-                console.log("LOG SERVER: Login FALHOU (senha incorreta) para:", username);
                 res.status(401).json({ success: false, message: 'Credenciais inválidas.' });
             }
         } else {
-            console.log("LOG SERVER: Login FALHOU (usuário não encontrado) para:", username);
             res.status(401).json({ success: false, message: 'Credenciais inválidas.' });
         }
     } catch (err) {
         console.error('SERVER: Erro na rota /login:', err);
-        res.status(500).json({ success: false, message: 'Erro no servidor ao tentar fazer login.' });
+        res.status(500).json({ success: false, message: 'Erro no servidor.' });
     }
 });
 
 async function getQueueState() {
-    // ... (função getQueueState como antes)
-    let waitingListFromDb = [];
-    let calledPatientInfoFromDb = null;
-    console.log('SERVER (getQueueState): Buscando estado da fila do banco...');
+    let waitingListFromDb = []; let calledPatientInfoFromDb = null;
+    console.log('SERVER (getQueueState): Buscando estado da fila...');
     try {
         const waitingResult = await pool.query(
             "SELECT id, name, priority, added_by_username, status, created_at FROM patients WHERE status = 'waiting' OR status = 'called' ORDER BY priority DESC, created_at ASC"
@@ -112,81 +100,64 @@ async function getQueueState() {
             addedBy: p.added_by_username, status: p.status
         }));
         const calledResult = await pool.query(
-            "SELECT id, name, added_by_username, status FROM patients WHERE status = 'called' ORDER BY called_at DESC LIMIT 1"
+            "SELECT id, name, added_by_username FROM patients WHERE status = 'called' ORDER BY called_at DESC LIMIT 1"
         );
         if (calledResult.rows.length > 0) {
-            const calledDbRow = calledResult.rows[0];
-            calledPatientInfoFromDb = { 
-                name: calledDbRow.name, calledBy: calledDbRow.added_by_username,
-                patientId: String(calledDbRow.id) 
-            };
+            const cd = calledResult.rows[0];
+            calledPatientInfoFromDb = { name: cd.name, calledBy: cd.added_by_username, patientId: String(cd.id) };
         }
-    } catch (err) { console.error("SERVER (getQueueState): Erro ao buscar estado da fila:", err); }
+    } catch (err) { console.error("SERVER (getQueueState): Erro ao buscar fila:", err); }
+    console.log('SERVER (getQueueState): Estado retornado:', { itemCount: waitingListFromDb.length, called: !!calledPatientInfoFromDb });
     return { waitingList: waitingListFromDb, calledPatientInfo: calledPatientInfoFromDb };
 }
 
 io.on('connection', async (socket) => {
     console.log('SERVER: Novo usuário conectado:', socket.id);
     const queueState = await getQueueState();
-    // Agora 'currentPlaylistUrl' é a variável global atualizada por loadAppConfig()
     socket.emit('initialData', { 
         waitingList: queueState.waitingList, 
         calledPatientInfo: queueState.calledPatientInfo, 
-        currentPlaylistUrl // Usa a variável global que foi carregada do BD
+        currentPlaylistUrl
     });
 
     socket.on('addPatient', async (patientData) => {
-        // ... (código do addPatient como antes, usando o banco)
-        console.log('SERVER (addPatient): Recebeu addPatient com dados:', patientData);
+        console.log('SERVER (addPatient): Recebeu:', patientData);
         const patientId = Date.now(); 
         try {
             await pool.query(
                 "INSERT INTO patients (id, name, priority, added_by_username, status, created_at) VALUES ($1, $2, $3, $4, 'waiting', NOW())",
                 [patientId, patientData.name, patientData.priority || false, patientData.addedBy]
             );
-            console.log('SERVER (addPatient): Paciente adicionado ao BANCO DE DADOS:', patientData.name);
             const updatedQueueState = await getQueueState();
             io.emit('updateWaitingList', updatedQueueState.waitingList); 
-        } catch (err) {
-            console.error("SERVER (addPatient): Erro ao adicionar paciente ao banco:", err);
-            socket.emit('addPatientError', { message: 'Erro ao adicionar paciente.'});
-        }
+        } catch (err) { console.error("SERVER (addPatient): Erro BD:", err); socket.emit('addPatientError', { message: 'Erro BD.'});}
     });
 
     socket.on('callPatient', async (data) => {
-        // ... (código do callPatient como antes, usando o banco)
-        console.log(`SERVER (callPatient): Recebeu 'callPatient'. Dados:`, data);
+        console.log(`SERVER (callPatient): Recebeu:`, data);
         try {
-            let patientToCallResult = await pool.query(
+            let pRes = await pool.query(
                 "SELECT id, name, added_by_username FROM patients WHERE id = $1 AND added_by_username = $2 AND status = 'waiting'",
                 [BigInt(data.patientId), data.calledBy]
             );
-            if (patientToCallResult && patientToCallResult.rows.length > 0) {
-                const patientToCall = patientToCallResult.rows[0];
-                const updateResult = await pool.query(
+            if (pRes && pRes.rows.length > 0) {
+                const pToCall = pRes.rows[0];
+                const uRes = await pool.query(
                     "UPDATE patients SET status = 'called', called_at = NOW() WHERE id = $1 RETURNING id, name, added_by_username",
-                    [patientToCall.id]
+                    [pToCall.id]
                 );
-                if (updateResult.rowCount > 0) {
-                    const calledPatientDb = updateResult.rows[0];
-                    const currentCalledPatientPayload = {
-                        name: calledPatientDb.name, calledBy: calledPatientDb.added_by_username,
-                        patientId: String(calledPatientDb.id)
-                    };
-                    const updatedQueueState = await getQueueState();
-                    io.emit('patientCalled', currentCalledPatientPayload);
-                    io.emit('updateWaitingList', updatedQueueState.waitingList);
-                } else { socket.emit('callError', { message: 'Erro ao tentar chamar (update falhou).' }); }
-            } else { socket.emit('callError', { message: 'Paciente não encontrado ou já chamado/atendido.' }); }
-        } catch (err) {
-            console.error("SERVER (callPatient): Erro no evento callPatient:", err);
-            socket.emit('callError', { message: 'Erro no servidor ao chamar paciente.'});
-        }
+                if (uRes.rowCount > 0) {
+                    const cP = uRes.rows[0];
+                    const cPPayload = { name: cP.name, calledBy: cP.added_by_username, patientId: String(cP.id) };
+                    const uQS = await getQueueState();
+                    io.emit('patientCalled', cPPayload);
+                    io.emit('updateWaitingList', uQS.waitingList);
+                } else { socket.emit('callError', { message: 'Update falhou.' }); }
+            } else { socket.emit('callError', { message: 'Paciente não elegível.' }); }
+        } catch (err) { console.error("SERVER (callPatient): Erro:", err); socket.emit('callError', { message: 'Erro servidor.'});}
     });
 
     socket.on('confirmPatientEntry', async (data) => {
-        // ... (código do confirmPatientEntry como antes, usando o banco)
-        console.log('SERVER (confirmPatientEntry): Recebeu confirmPatientEntry:', data);
         try {
             const result = await pool.query(
                 "UPDATE patients SET status = 'attended', attended_at = NOW() WHERE id = $1 AND added_by_username = $2 AND status = 'called' RETURNING id",
@@ -197,15 +168,10 @@ io.on('connection', async (socket) => {
                 io.emit('callResolved'); 
                 io.emit('updateWaitingList', updatedQueueState.waitingList);
             }
-        } catch (err) {
-            console.error("SERVER (confirmPatientEntry): Erro ao confirmar entrada:", err);
-            socket.emit('confirmationError', { message: 'Erro ao confirmar entrada.'});
-        }
+        } catch (err) { console.error("SERVER (confirmPatientEntry): Erro:", err); socket.emit('confirmationError', { message: 'Erro BD.'});}
     });
 
     socket.on('cancelCall', async (data) => {
-        // ... (código do cancelCall como antes, usando o banco)
-        console.log('SERVER (cancelCall): Recebeu cancelCall:', data);
         try {
              const result = await pool.query(
                 "UPDATE patients SET status = 'waiting', called_at = NULL WHERE id = $1 AND added_by_username = $2 AND status = 'called' RETURNING id",
@@ -216,32 +182,25 @@ io.on('connection', async (socket) => {
                 io.emit('callResolved');
                 io.emit('updateWaitingList', updatedQueueState.waitingList);
             }
-        } catch (err) {
-            console.error("SERVER (cancelCall): Erro ao cancelar chamada:", err);
-            socket.emit('cancelError', { message: 'Erro ao cancelar chamada.'});
-        }
+        } catch (err) { console.error("SERVER (cancelCall): Erro:", err); socket.emit('cancelError', { message: 'Erro BD.'});}
     });
     
     socket.on('adminAddUser', async (data) => {
-        // ... (código do adminAddUser como antes, usando o banco e bcrypt)
-        console.log('SERVER (adminAddUser): Recebeu evento com dados:', data.adminUsername, data.usernameToAdd);
+        console.log('SERVER (adminAddUser): Recebeu:', data.adminUsername, data.usernameToAdd);
         try {
             const adminUserResult = await pool.query('SELECT password_hash FROM users WHERE username = $1', [data.adminUsername]);
             let isAdminAuthorized = false;
-            if (adminUserResult.rows.length > 0) {
-                if (adminUserResult.rows[0].password_hash.startsWith('$2a$') || adminUserResult.rows[0].password_hash.startsWith('$2b$')) { 
-                    isAdminAuthorized = await bcrypt.compare('admin', adminUserResult.rows[0].password_hash); 
-                } else if (adminUserResult.rows[0].password_hash === 'admin' && data.adminUsername === 'Admin') { 
-                    isAdminAuthorized = true;
-                }
+            if (adminUserResult.rows.length > 0 && data.adminUsername === 'Admin') { // Garante que é o usuário 'Admin'
+                const adminPasswordInDb = adminUserResult.rows[0].password_hash;
+                // Assume que a senha do admin no formulário para esta ação é 'admin'
+                isAdminAuthorized = await bcrypt.compare('admin', adminPasswordInDb);
             }
-            if (data.adminUsername === 'Admin' && isAdminAuthorized) {
-                // ... (lógica interna do adminAddUser)
+            if (isAdminAuthorized) {
                 if (!data.usernameToAdd || !data.passwordForNewUser) {
-                    socket.emit('adminAddUserResponse', { success: false, message: 'Nome ou senha do novo usuário faltando.' }); return;
+                    socket.emit('adminAddUserResponse', { success: false, message: 'Dados faltando.' }); return;
                 }
                 const trimmedUsernameToAdd = data.usernameToAdd.trim();
-                const existingUserResult = await pool.query('SELECT * FROM users WHERE username = $1', [trimmedUsernameToAdd]);
+                const existingUserResult = await pool.query('SELECT id FROM users WHERE username = $1', [trimmedUsernameToAdd]);
                 if (existingUserResult.rows.length > 0) {
                     socket.emit('adminAddUserResponse', { success: false, message: `Usuário '${trimmedUsernameToAdd}' já existe.` });
                 } else {
@@ -252,29 +211,45 @@ io.on('connection', async (socket) => {
             } else {
                 socket.emit('adminAddUserResponse', { success: false, message: 'Ação não autorizada.' });
             }
+        } catch (err) { console.error('SERVER (adminAddUser): Erro:', err); socket.emit('adminAddUserResponse', { success: false, message: 'Erro servidor.' });}
+    });
+
+    // NOVO HANDLER PARA ADMIN LISTAR USUÁRIOS
+    socket.on('adminRequestUserList', async (data) => {
+        console.log('SERVER (adminRequestUserList): Solicitado por:', data.adminUsername);
+        try {
+            const adminUserResult = await pool.query('SELECT password_hash FROM users WHERE username = $1', [data.adminUsername]);
+            let isAdminAuthorized = false;
+            if (data.adminUsername === 'Admin' && adminUserResult.rows.length > 0) {
+                 // Assume que a senha do admin no formulário para esta ação é 'admin'
+                isAdminAuthorized = await bcrypt.compare('admin', adminUserResult.rows[0].password_hash);
+            }
+
+            if (isAdminAuthorized) {
+                const usersResult = await pool.query('SELECT id, username, created_at FROM users ORDER BY username ASC');
+                socket.emit('adminUserListResponse', { success: true, users: usersResult.rows });
+            } else {
+                socket.emit('adminUserListResponse', { success: false, message: 'Ação não autorizada.' });
+            }
         } catch (err) {
-            console.error('SERVER (adminAddUser): Erro no evento:', err);
-            socket.emit('adminAddUserResponse', { success: false, message: 'Erro no servidor ao adicionar usuário.' });
+            console.error('SERVER: Erro no evento adminRequestUserList:', err);
+            socket.emit('adminUserListResponse', { success: false, message: 'Erro no servidor ao listar usuários.' });
         }
     });
     
-    // Modificado para salvar no banco de dados
-    socket.on('updatePlaylist', async (playlistUrlFromClient) => { // Adicionado async
+    socket.on('updatePlaylist', async (playlistUrlFromClient) => {
         console.log('SERVER (updatePlaylist): Recebeu URL:', playlistUrlFromClient);
-        // Validação simples da URL (pode ser melhorada)
         if (playlistUrlFromClient && (playlistUrlFromClient.includes("youtube.com/embed/") || playlistUrlFromClient.includes("https://www.youtube.com/embed/videoseries?list=SUALISTADEVIDEOS"))) {
             const success = await saveAppConfig('currentPlaylistUrl', playlistUrlFromClient);
             if (success) {
-                currentPlaylistUrl = playlistUrlFromClient; // Atualiza a variável global no servidor
-                io.emit('playlistUpdated', currentPlaylistUrl); // Notifica todos os clientes
-                console.log('SERVER (updatePlaylist): Playlist atualizada no BD e emitida:', currentPlaylistUrl);
-                socket.emit('playlistUpdateSuccess', { message: 'Playlist atualizada com sucesso!', url: currentPlaylistUrl });
+                currentPlaylistUrl = playlistUrlFromClient; 
+                io.emit('playlistUpdated', currentPlaylistUrl);
+                socket.emit('playlistUpdateSuccess', { message: 'Playlist atualizada!', url: currentPlaylistUrl });
             } else {
-                socket.emit('playlistError', { message: 'Erro ao salvar URL da playlist no banco de dados.' });
+                socket.emit('playlistError', { message: 'Erro ao salvar URL no BD.' });
             }
         } else {
-            console.log('SERVER (updatePlaylist): URL da playlist inválida recebida:', playlistUrlFromClient);
-            socket.emit('playlistError', { message: 'URL da playlist fornecida é inválida.' });
+            socket.emit('playlistError', { message: 'URL da playlist inválida.' });
         }
     });
 
@@ -283,14 +258,7 @@ io.on('connection', async (socket) => {
     });
 });
 
-// Garante que a configuração inicial seja carregada antes do servidor começar a ouvir por conexões de fato
-// No entanto, pool.connect é chamado uma vez. loadAppConfig é chamado dentro do callback de sucesso.
-// server.listen pode ser chamado diretamente.
 server.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
-    // loadAppConfig será chamado quando a pool se conectar com sucesso.
-    // Se a pool já conectou, loadAppConfig já foi chamado.
-    // Se a conexão com a pool falhar e depois reconectar, loadAppConfig não é chamado de novo automaticamente por este listen.
-    // A chamada inicial de loadAppConfig no pool.connect é o ponto principal.
-    console.log(`Acesse a tela de login em: http://localhost:${PORT}`);
+    // loadAppConfig é chamado no callback do pool.connect
 });
