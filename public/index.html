@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistema de Filas UBS</title>
+    <link rel="stylesheet" href="style.css"> <style>
+        /* Estilos específicos para a página de login - podem ir para style.css */
+        body.login-page-body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #eef1f5; /* Um cinza azulado muito claro */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px; /* Espaçamento para telas menores */
+            box-sizing: border-box;
+        }
+
+        .login-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-box {
+            background-color: #ffffff;
+            padding: 30px 40px;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px; /* Largura máxima da caixa de login */
+            text-align: center;
+        }
+
+        .login-logo img {
+            max-width: 250px; /* Ajuste o tamanho do logo conforme necessário */
+            margin-bottom: 15px;
+        }
+
+        .login-box h2 {
+            color: #333;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .login-box .login-subtext {
+            color: #666;
+            font-size: 0.95em;
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            position: relative; /* Para posicionar o ícone */
+            margin-bottom: 20px;
+        }
+
+        .input-group .input-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+            font-size: 1.1em; /* Tamanho do ícone de texto */
+        }
+
+        .input-group input[type="text"],
+        .input-group input[type="password"] {
+            width: calc(100% - 40px); /* Largura total menos padding e espaço do ícone */
+            padding: 14px 20px 14px 50px; /* Padding à esquerda para o ícone */
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            box-sizing: border-box; /* Garante que padding não aumente a largura total */
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .input-group input[type="text"]:focus,
+        .input-group input[type="password"]:focus {
+            border-color: #007bff; /* Azul primário da prefeitura ou similar */
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+            outline: none;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background-color: #0056b3; /* Azul escuro - pode ser o azul do logo */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .login-btn:hover {
+            background-color: #004080; /* Azul mais escuro */
+        }
+
+        .login-error-message {
+            color: #dc3545; /* Vermelho para erro */
+            font-size: 0.9em;
+            margin-top: 15px;
+            min-height: 1.2em; /* Para não deslocar o layout quando vazia */
+        }
+
+        /* O .login-info foi removido, então este estilo não é mais estritamente necessário,
+           mas não faz mal deixá-lo se você tiver outro .login-info em algum lugar.
+        .login-info {
+            margin-top: 25px;
+            font-size: 0.85em;
+            color: #777;
+        }
+        .login-info code {
+            background-color: #e9ecef;
+            padding: 2px 4px;
+            border-radius: 3px;
+            color: #333;
+        }
+        */
+
+    </style>
+</head>
+<body class="login-page-body">
+    <div class="login-container">
+        <div class="login-box">
+            <div class="login-logo">
+                <img src="/images/logo_site.png" alt="Logo Prefeitura de Santa Luzia">
+            </div>
+            <h2>Acessar o Sistema</h2>
+            <p class="login-subtext">UBS SESC - Secretaria de Saúde Santa Luzia</p>
+
+            <form id="loginFormInternal">
+                <div class="input-group">
+                    <span class="input-icon">👤</span>
+                    <input type="text" id="username" name="username" placeholder="Nome de Usuário" required>
+                </div>
+
+                <div class="input-group">
+                    <span class="input-icon">🔒</span>
+                    <input type="password" id="password" name="password" placeholder="Senha" required>
+                </div>
+
+                <button type="button" id="loginButton" class="login-btn">Entrar</button>
+                <p id="loginMessage" class="login-error-message"></p>
+            </form>
+
+            </div>
+    </div>
+    <script src="/js/login.js"></script>
+</body>
+</html>

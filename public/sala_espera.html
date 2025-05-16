@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sala de Espera - UBS SESC</title>
+    <link rel="stylesheet" href="style.css"> <style>
+        /* Estilos para o botão de ativar som e seu destaque */
+        #activateSoundButton {
+            position: fixed;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 25px;
+            font-size: 1em;
+            color: white;
+            background-color: #28a745;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 1001;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+        #activateSoundButton:hover {
+            background-color: #218838;
+            transform: translateX(-50%) scale(1.05);
+        }
+        #activateSoundButton.hidden {
+            display: none;
+        }
+        #activateSoundButton.highlight-needed {
+            border: 3px solid #ffc107 !important;
+            background-color: #dc3545 !important;
+            color: white !important;
+            animation: pulseEffect 1.5s infinite;
+        }
+        @keyframes pulseEffect {
+            0% { transform: translateX(-50%) scale(1); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+            70% { transform: translateX(-50%) scale(1.05); box-shadow: 0 0 10px 20px rgba(220, 53, 69, 0); }
+            100% { transform: translateX(-50%) scale(1); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+        }
+
+        /* Estilos para o logo no cabeçalho da sala de espera */
+        #headerLogo {
+            height: 50px; 
+            width: auto;  
+            margin: 0 15px; 
+        }
+
+        /* Estilos para .info-unidade (cabeçalho com nome, logo, relógio) */
+        .info-unidade {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #f0f2f5; 
+            color: #333333; 
+            font-size: 1.1em; 
+            border-bottom: 1px solid #dee2e6; 
+        }
+        .info-unidade .nome-unidade {
+            text-align: left;
+            flex-shrink: 0;
+        }
+        .info-unidade .data-hora {
+            text-align: right;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .info-unidade .data-hora svg {
+            width: 22px; 
+            height: 22px;
+            margin-right: 8px;
+            fill: #333333; 
+        }
+
+        /* --- NOVOS ESTILOS PARA A LISTA DE ESPERA --- */
+        .lista-espera-sala h3 {
+            color: #fff; 
+            margin-top: 0;
+            border-bottom: 1px solid rgba(255,255,255,0.3); 
+            padding-bottom: 10px; 
+            margin-bottom: 15px; 
+        }
+
+        .lista-espera-sala ul li {
+            background-color: rgba(255, 255, 255, 0.08); 
+            color: #fff;                       
+            font-size: 1.1em; 
+            padding: 12px 15px; 
+            margin-bottom: 8px; 
+            border-radius: 5px; 
+            
+            /* Faixa Verde para Pacientes Normais (padrão) */
+            border-left: 6px solid #28a745; /* Verde para a faixa */
+
+            display: flex; 
+            align-items: center; 
+            transition: background-color 0.3s ease, border-left-color 0.3s ease; 
+        }
+
+        .lista-espera-sala ul li:hover {
+            background-color: rgba(255, 255, 255, 0.15); 
+        }
+
+        .lista-espera-sala ul li.priority {
+            /* Faixa Vermelha para Pacientes Prioritários */
+            border-left-color: #dc3545; /* Vermelho para a faixa, sobrescreve o verde */
+            font-weight: bold; 
+        }
+
+        /* Estilo para a mensagem "Nenhum paciente aguardando" */
+        .lista-espera-sala ul li:only-child { 
+            /* Aplica somente se for o único <li> na lista */
+            /* Verificando o conteúdo exato pode ser complicado apenas com CSS,
+               mas podemos dar um estilo geral se for o único item. */
+            /* Se o texto for exatamente "Nenhum paciente aguardando.", o JS já o insere. */
+            /* Vamos dar um estilo genérico para o único filho, se ele for a mensagem. */
+        }
+         /* Se o JS sempre colocar essa mensagem em um <li>, esta regra mais específica pode não ser necessária,
+            mas uma forma de diferenciar seria se o JS adicionasse uma classe específica para a mensagem de "vazio".
+            Por enquanto, a estilização padrão de 'li' (faixa verde) será aplicada se for um 'li'.
+            Se a mensagem "Nenhum paciente aguardando." não tiver a classe 'priority', ela terá a faixa verde.
+            Se quiser uma faixa cinza especificamente para ela, o JS precisaria adicionar uma classe como 'empty-message'.
+            Para manter simples, ela terá a faixa verde se for o único item e não prioritário. */
+
+    </style>
+</head>
+<body id="sala-espera-body">
+
+    <button id="activateSoundButton">Ativar Som da Sala de Espera</button>
+
+    <div class="chamada-paciente" id="chamadaPacienteDisplay">
+        Aguardando chamada...
+    </div>
+
+    <header class="sala-espera-header">
+        <div class="info-unidade">
+            <div class="nome-unidade">
+                UBS SESC - Secretaria de Saúde<br>Prefeitura Municipal de Santa Luzia
+            </div>
+            <img src="/images/logo_site.png" alt="Logo Prefeitura de Santa Luzia" id="headerLogo">
+            <div class="data-hora">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"/>
+                    <path d="M13 7h-2v5.414l3.293 3.293 1.414-1.414L13 11.586V7z"/>
+                </svg>
+                <span id="dateTimeDisplay">--/--/---- --:--:--</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="sala-espera-content">
+        <aside class="lista-espera-sala">
+            <h3>Pacientes Aguardando</h3>
+            <ul id="waitingListDisplay">
+                <li>Nenhum paciente aguardando.</li> </ul>
+        </aside>
+        <section class="video-player-sala">
+            <div id="youtubePlayer"></div> 
+        </section>
+    </main>
+
+    <footer class="sala-espera-footer">
+        2025 UBS SESC Atendimento. Tenha um ótimo dia! Criado por Alexander Jimenez Ocana.
+    </footer>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/sala_espera_cliente.js"></script> 
+</body>
+</html>
