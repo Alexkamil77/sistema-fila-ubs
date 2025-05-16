@@ -2,14 +2,14 @@
 document.addEventListener('DOMContentLoaded', () => {
     const loggedInUser = localStorage.getItem('loggedInUser');
     if (!loggedInUser) {
-        window.location.href = '/';
+        window.location.href = '/'; 
         return;
     }
 
     const userInfoDisplay = document.getElementById('user-info');
     if(userInfoDisplay) userInfoDisplay.textContent = `Usuário: ${loggedInUser}`;
 
-    const socket = io();
+    const socket = io(); 
 
     const patientNameInput = document.getElementById('patientName');
     const priorityCheckbox = document.getElementById('priority');
@@ -67,7 +67,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         waitingList.forEach(patient => {
-            // A função getQueueState no servidor agora mapeia added_by_username para addedBy
             if (patient.addedBy === loggedInUser) { 
                 foundMyPatients = true;
                 const listItem = document.createElement('li');
@@ -91,7 +90,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.call-btn').forEach(button => {
             button.addEventListener('click', (e) => {
                 const patientId = e.target.dataset.id;
-                console.log(`PAINEL_USUARIO: Clicou em Chamar. ID: ${patientId}, Por: ${loggedInUser}`);
                 socket.emit('callPatient', { patientId, calledBy: loggedInUser });
             });
         });
@@ -118,17 +116,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Lógica para Gerenciamento de Usuários pelo Admin
     const adminUserManagementSection = document.getElementById('admin-user-management-section');
     if (loggedInUser === 'Admin' && adminUserManagementSection) {
-        adminUserManagementSection.style.display = 'block';
+        adminUserManagementSection.style.display = 'block'; 
+
         const newUsernameInput = document.getElementById('newUsername');
         const newUserPasswordInput = document.getElementById('newUserPassword');
         const adminAddUserButton = document.getElementById('adminAddUserButton');
         const adminUserMessage = document.getElementById('adminUserMessage');
 
+        const adminListUsersButton = document.getElementById('adminListUsersButton');
+        const adminUserDisplayList = document.getElementById('adminUserDisplayList');
+        const adminListUsersMessage = document.getElementById('adminListUsersMessage');
+
         if (adminAddUserButton) {
             adminAddUserButton.addEventListener('click', () => {
-                // ... (lógica do adminAddUser como antes)
                 const usernameToAdd = newUsernameInput.value.trim();
                 const passwordForNewUser = newUserPasswordInput.value.trim();
                 if(adminUserMessage) adminUserMessage.textContent = '';
@@ -147,6 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
         }
+
         socket.on('adminAddUserResponse', (response) => {
             if(adminUserMessage) {
                 adminUserMessage.textContent = response.message;
@@ -154,10 +158,52 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (response.success) {
                 if(newUsernameInput) newUsernameInput.value = ''; 
+                if(adminListUsersButton) adminListUsersButton.click(); // Atualiza a lista após adicionar
             }
         });
+
+        if (adminListUsersButton) {
+            adminListUsersButton.addEventListener('click', () => {
+                console.log('PAINEL_USUARIO (Admin): Solicitando lista de usuários.');
+                if(adminListUsersMessage) adminListUsersMessage.textContent = 'Carregando lista...';
+                socket.emit('adminRequestUserList', { adminUsername: loggedInUser });
+            });
+        }
+
+        socket.on('adminUserListResponse', (response) => {
+            console.log('PAINEL_USUARIO (Admin): Resposta do servidor para adminRequestUserList:', response);
+            if(adminUserDisplayList) adminUserDisplayList.innerHTML = ''; 
+            if(adminListUsersMessage) adminListUsersMessage.textContent = ''; 
+
+            if (response.success && response.users) {
+                if (response.users.length === 0) {
+                    if(adminListUsersMessage) adminListUsersMessage.textContent = 'Nenhum usuário cadastrado (além de você).';
+                } else {
+                    response.users.forEach(user => {
+                        const listItem = document.createElement('li');
+                        const creationDate = new Date(user.created_at).toLocaleDateString('pt-BR', {
+                            day: '2-digit', month: '2-digit', year: 'numeric', 
+                            hour: '2-digit', minute: '2-digit'
+                        });
+                        listItem.textContent = `${user.username} (Criado em: ${creationDate})`;
+                        if(adminUserDisplayList) adminUserDisplayList.appendChild(listItem);
+                    });
+                }
+            } else {
+                if(adminListUsersMessage) {
+                    adminListUsersMessage.textContent = response.message || 'Erro ao carregar lista de usuários.';
+                    adminListUsersMessage.style.color = 'red';
+                }
+            }
+        });
+        // Opcional: Carregar a lista de usuários assim que o painel do admin for exibido
+        // setTimeout(() => { // Pequeno delay para garantir que o socket esteja pronto
+        //    if(adminListUsersButton) adminListUsersButton.click();
+        // }, 500);
+
     }
 
+    // Eventos do Socket.IO
     socket.on('initialData', (data) => {
         console.log('PAINEL_USUARIO: Recebeu initialData', data);
         if (data.waitingList) renderMyPatientList(data.waitingList);
@@ -167,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     socket.on('updateWaitingList', (waitingList) => {
-        console.log('PAINEL_USUARIO: Recebeu updateWaitingList do servidor. Lista:', waitingList); // LOG ADICIONADO AQUI
+        console.log('PAINEL_USUARIO: Recebeu updateWaitingList do servidor. Lista:', waitingList);
         renderMyPatientList(waitingList);
     });
 
