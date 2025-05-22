@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Profissional - Sistema de Filas</title>
+    <link rel="stylesheet" href="style.css"> <style>
+        /* Estilos específicos para o painel do profissional */
+        body.panel-body {
+            background-color: #f4f7fc;
+            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+
+        .panel-container {
+            max-width: 1200px; 
+            margin: 20px auto;
+            padding: 20px;
+            background-color: transparent;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px;
+            background-color: #0056b3;
+            color: white;
+            border-radius: 8px 8px 0 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .panel-header #user-info {
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+
+        .panel-header #logoutButton {
+            background-color: #dc3545;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+        }
+        .panel-header #logoutButton:hover {
+            background-color: #c82333;
+        }
+
+        .panel-content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr; 
+            gap: 25px; 
+            margin-top: 25px; 
+        }
+
+        .panel-section {
+            background-color: #ffffff;
+            padding: 25px;
+            margin-bottom: 25px; 
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .panel-content-grid .panel-section {
+            margin-bottom: 0; 
+        }
+
+        .panel-section h2 {
+            color: #0056b3;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.6em;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+        .panel-section h2 .icon, .panel-section h3 .icon { 
+            margin-right: 10px;
+            font-size: 0.9em; 
+        }
+
+        .panel-form label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        .panel-form input[type="text"],
+        .panel-form input[type="url"],
+        .panel-form input[type="checkbox"] {
+            margin-bottom: 15px;
+        }
+        .panel-form input[type="text"],
+        .panel-form input[type="url"] {
+            width: calc(100% - 24px);
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .panel-form input[type="text"]:focus,
+        .panel-form input[type="url"]:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+            outline: none;
+        }
+        .panel-form .checkbox-label {
+            display: flex;
+            align-items: center;
+            font-weight: normal;
+        }
+         .panel-form input[type="checkbox"] {
+            margin-right: 8px;
+            width: 18px;
+            height: 18px;
+            accent-color: #007bff;
+        }
+
+        .panel-button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        .panel-button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+         .panel-button:active {
+            transform: translateY(0);
+        }
+
+        #myPatientList {
+            list-style-type: none;
+            padding: 0;
+            max-height: 400px; 
+            overflow-y: auto;  
+        }
+        #myPatientList li {
+            background-color: #f8f9fa;
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border-left: 5px solid #007bff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: box-shadow 0.3s ease;
+        }
+        #myPatientList li:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        #myPatientList li.priority {
+            border-left-color: #ffc107;
+            background-color: #fff3cd;
+        }
+        #myPatientList li span {
+            font-weight: 500;
+            color: #343a40;
+            margin-right: 10px; 
+            word-break: break-word; 
+        }
+        .patient-list-controls {
+            display: flex; 
+            flex-shrink: 0; 
+        }
+        .patient-list-controls button {
+            padding: 6px 10px; 
+            font-size: 0.8em; 
+            margin-left: 5px; 
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+            white-space: nowrap; 
+        }
+        .patient-list-controls button:hover {
+            transform: scale(1.05);
+        }
+        .patient-list-controls .call-btn { background-color: #28a745; color: white; border: none; }
+        .patient-list-controls .call-btn:hover { background-color: #218838; }
+        .patient-list-controls .confirm-btn { background-color: #17a2b8; color: white; border: none; }
+        .patient-list-controls .confirm-btn:hover { background-color: #138496; }
+        .patient-list-controls .cancel-btn { background-color: #6c757d; color: white; border: none; }
+        .patient-list-controls .cancel-btn:hover { background-color: #5a6268; }
+
+        #playlistMessage, #adminUserMessage, #adminListUsersMessage { margin-top: 10px; }
+        #noMyPatientsMessage { color: #6c757d; font-style: italic; padding: 15px 0; }
+        
+        #adminUserDisplayList {
+            list-style-type: decimal; 
+            padding-left: 20px; 
+            margin-top: 10px;
+            max-height: 200px; /* Altura máxima para a lista de usuários */
+            overflow-y: auto; /* Scroll se necessário */
+        }
+        #adminUserDisplayList li {
+            padding: 5px 0;
+            font-size: 0.95em;
+            color: #495057;
+            border-bottom: 1px dashed #eee; /* Linha sutil entre usuários */
+        }
+        #adminUserDisplayList li:last-child {
+            border-bottom: none;
+        }
+        .panel-section hr {
+            border: 0;
+            height: 1px;
+            background-color: #e9ecef;
+            margin: 25px 0;
+        }
+        .panel-section h3 {
+            color: #0056b3;
+            font-size: 1.3em;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 800px) { 
+            .panel-content-grid { grid-template-columns: 1fr; }
+            #myPatientList { max-height: 300px; }
+        }
+    </style>
+</head>
+<body class="panel-body">
+    <div class="panel-container">
+        <header class="panel-header">
+            <div id="user-info">Carregando usuário...</div>
+            <button id="logoutButton">Sair</button>
+        </header>
+
+        <div class="panel-content-grid">
+            <div class="panel-column-form">
+                <section class="panel-section panel-form" id="add-patient-section">
+                    <h2><span class="icon">👤</span> Adicionar Paciente</h2>
+                    <label for="patientName">Nome do Paciente:</label>
+                    <input type="text" id="patientName" placeholder="Nome completo do paciente">
+                    <label for="priority" class="checkbox-label">
+                        <input type="checkbox" id="priority">
+                        Prioridade
+                    </label>
+                    <br>
+                    <button id="addPatientButton" class="panel-button">Adicionar à Fila</button>
+                </section>
+            </div>
+
+            <div class="panel-column-list">
+                <section class="panel-section" id="my-patients-section">
+                    <h2><span class="icon">📋</span> Minha Lista de Espera</h2>
+                    <ul id="myPatientList"></ul>
+                    <p id="noMyPatientsMessage" style="display:none;">Nenhum paciente adicionado por você na fila.</p>
+                </section>
+            </div>
+        </div> 
+
+        <section class="panel-section panel-form" id="playlist-section">
+            <h2><span class="icon">🎵</span> Configurar Playlist</h2>
+            <label for="playlistUrl">URL de Incorporação (Embed) da Playlist do YouTube:</label>
+            <input type="url" id="playlistUrl" placeholder="Cole aqui a URL de incorporação do YouTube">
+            <button id="updatePlaylistButton" class="panel-button">Atualizar Playlist</button>
+            <p id="playlistMessage" style="color: green;"></p>
+            <p><small>Dica: No YouTube, vá em Compartilhar > Incorporar e copie a URL do atributo `src`.</small></p>
+        </section>
+
+        <section class="panel-section panel-form" id="admin-user-management-section" style="display: none;">
+            <h2><span class="icon">👥</span> Gerenciar Usuários (Admin)</h2>
+            <div>
+                <label for="newUsername">Nome do Novo Usuário:</label>
+                <input type="text" id="newUsername" placeholder="Ex: DrMaria">
+            </div>
+            <div>
+                <label for="newUserPassword">Senha para Novo Usuário:</label>
+                <input type="text" id="newUserPassword" value="saude123" placeholder="Senha padrão: saude123">
+            </div>
+            <button id="adminAddUserButton" class="panel-button">Adicionar Novo Usuário</button>
+            <p id="adminUserMessage"></p>
+
+            <hr> 
+
+            <h3><span class="icon">📄</span> Usuários Cadastrados</h3>
+            <button id="adminListUsersButton" class="panel-button" style="margin-bottom:15px; background-color: #17a2b8;">Listar/Atualizar Usuários</button> 
+            <ul id="adminUserDisplayList">
+                </ul>
+            <p id="adminListUsersMessage"></p>
+        </section>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/painel_usuario.js"></script>
+</body>
+</html>

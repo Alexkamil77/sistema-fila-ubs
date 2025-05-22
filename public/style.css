@@ -1,0 +1,252 @@
+/* public/style.css */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f4f4f4;
+    color: #333;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 900px;
+    margin: auto;
+    overflow: auto;
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+h1, h2, h3 {
+    color: #0056b3; /* Azul SESC/Saúde */
+}
+
+input[type="text"], input[type="password"], input[type="url"], select {
+    width: calc(100% - 22px);
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+button {
+    background-color: #007bff; /* Azul primário */
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-right: 5px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+button.cancel-btn {
+    background-color: #dc3545; /* Vermelho */
+}
+button.cancel-btn:hover {
+    background-color: #c82333;
+}
+
+button.confirm-btn {
+    background-color: #28a745; /* Verde */
+}
+button.confirm-btn:hover {
+    background-color: #218838;
+}
+
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+li {
+    padding: 10px;
+    background: #e9ecef;
+    margin-bottom: 5px;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+li.priority {
+    background: #fff3cd; /* Amarelo claro para prioridade */
+    font-weight: bold;
+}
+
+.login-form, .patient-form, .playlist-form {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f9f9f9;
+    border: 1px solid #eee;
+    border-radius: 5px;
+}
+
+.section {
+    margin-bottom: 30px;
+}
+
+/* Estilos Sala de Espera */
+#sala-espera-body {
+    background-color: #003366; /* Azul escuro para a sala de espera */
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden; /* Evitar barras de rolagem desnecessárias */
+}
+
+.sala-espera-header {
+    background-color: #004080;
+    padding: 10px 20px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.chamada-paciente {
+    background-color: #ffc107; /* Amarelo alerta */
+    color: #333;
+    padding: 20px;
+    font-size: 2.5em;
+    font-weight: bold;
+    text-align: center;
+    min-height: 80px; /* Para não sumir quando não há paciente */
+}
+.chamada-paciente span {
+    display: block; /* Para nome e sala ficarem em linhas diferentes */
+}
+.chamada-paciente .sala {
+    font-size: 0.7em;
+    font-weight: normal;
+}
+
+.info-unidade {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background-color: #00509E;
+    font-size: 1.2em;
+}
+.info-unidade .nome-unidade {
+    text-align: left;
+}
+.info-unidade .data-hora {
+    text-align: right;
+    display: flex;
+    align-items: center;
+}
+.info-unidade .data-hora svg { /* Ícone de relógio SVG */
+    width: 24px;
+    height: 24px;
+    margin-right: 8px;
+    fill: white;
+}
+
+
+.sala-espera-content {
+    display: flex;
+    flex: 1; /* Ocupa o espaço restante */
+    padding: 10px;
+    overflow: hidden; /* Para que as seções internas controlem seu scroll */
+}
+
+.lista-espera-sala {
+    flex: 1; /* 1/3 do espaço */
+    padding: 10px;
+    background-color: rgba(255,255,255,0.1);
+    border-radius: 5px;
+    margin-right: 10px;
+    overflow-y: auto; /* Scroll se a lista for grande */
+}
+.lista-espera-sala h3 {
+    color: #fff;
+    margin-top: 0;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 5px;
+}
+.lista-espera-sala ul li {
+    background-color: rgba(0,0,0,0.2);
+    color: #fff;
+    font-size: 1.1em;
+    padding: 8px;
+}
+.lista-espera-sala ul li.priority {
+    background-color: rgba(255, 243, 205, 0.3);
+    font-weight: bold;
+    color: #fff3cd;
+}
+
+
+.video-player-sala {
+    flex: 2; /* 2/3 do espaço */
+    background-color: #000; /* Fundo preto para o player */
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.video-player-sala iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.sala-espera-footer {
+    padding: 10px;
+    text-align: center;
+    font-size: 0.9em;
+    background-color: #002040;
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.2);
+}
+
+/* Pequenos ajustes para o painel do usuário */
+#user-info {
+    margin-bottom: 20px;
+    font-size: 1.2em;
+    color: #0056b3;
+}
+
+.patient-list-controls button {
+    margin-left: 10px;
+}
+/* Estilos para o logo no cabeçalho da sala de espera */
+#headerLogo {
+    height: 50px; /* Ajuste a altura conforme necessário */
+    width: auto; /* Mantém a proporção da imagem */
+    margin: 0 20px; /* Adiciona um espaçamento dos lados */
+}
+
+/* Ajuste para o container info-unidade para melhor alinhamento com 3 itens */
+.info-unidade {
+    display: flex;
+    justify-content: space-between; /* Isso pode precisar de ajuste se os itens não ficarem bem distribuídos */
+    /* Se quiser que o logo fique mais ao centro do espaço total, space-around pode ser uma opção,
+       ou você pode precisar de flex-grow nos outros elementos ou margens automáticas.
+       Para um layout mais controlado com 3 itens onde o logo é centralizado entre os outros dois: */
+    /* justify-content: center; /* Se os textos tiverem tamanhos muito diferentes, isso pode não alinhar como esperado */
+    align-items: center;
+    padding: 15px 20px;
+    background-color: #00509E; /* Cor de fundo que você já tinha */
+    font-size: 1.2em;
+}
+
+.info-unidade .nome-unidade {
+    text-align: left;
+    flex-shrink: 0; /* Evita que o nome da unidade encolha demais */
+}
+
+.info-unidade .data-hora {
+    text-align: right;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0; /* Evita que o relógio encolha demais */
+}
