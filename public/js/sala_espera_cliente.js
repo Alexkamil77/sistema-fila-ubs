@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let ytPlayer;
     let lastValidPlaylistUrl = null;
     let currentInitialData = null;
-    const VIDEO_DEFAULT_VOLUME = 35; // Define o volume padrão do vídeo (seus 35%)
+    const VIDEO_DEFAULT_VOLUME = 50; // Define o volume padrão do vídeo (seus 50%)
 
     // Função chamada automaticamente quando a API do YouTube estiver pronta
     function onYouTubeIframeAPIReady() {
